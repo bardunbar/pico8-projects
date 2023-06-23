@@ -1,0 +1,2 @@
+# Ignore the builds folder as it only holds intermediate data
+builds/

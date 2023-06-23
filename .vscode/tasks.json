@@ -7,7 +7,20 @@
             "label": "launch pico8",
             "type": "shell",
             "command": "${workspaceFolder}/../pico8.exe -windowed 1 ${file}",
-            "problemMatcher": []
+        },
+        {
+            "label": "publish",
+            "type": "shell",
+            "command": "butler push builds\\${fileBasenameNoExtension}_html\\${fileBasenameNoExtension}.zip dunbargames/pico-jam:html5",
+            "dependsOrder": "sequence",
+            "dependsOn":[
+                "export"
+            ]
+        },
+        {
+            "label": "export",
+            "type": "shell",
+            "command": ".\\tools\\export.bat ${relativeFile} ${fileBasenameNoExtension}"
         }
     ]
 }
