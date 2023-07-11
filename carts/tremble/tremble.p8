@@ -60,43 +60,6 @@ function gen_blend(level)
   end
 end
 
--- function gen_blend(l)
---   local lutaddr=0x4300+shl(l,8)
---   return function(x1,x2,y)
---     local laddr=lutaddr
---     local yaddr=0x6000+shl(y,6)
---     local saddr,eaddr=
---      yaddr+band(shr(x1+1,1),0xffff),
---      yaddr+band(shr(x2-1,1),0xffff)
---     -- odd pixel on left?
---     if band(x1,1.99995)>=1 then
---      local a=saddr-1
---      local v=peek(a)
---      poke(a,
---       band(v,0xf) +
---       band(peek(bor(laddr,v)),0xf0)
---      )
---     end
---      -- full bytes
---     for addr=saddr,eaddr do
---      poke(addr,
---       peek(
---        bor(laddr,peek(addr))
---       )
---      )
---     end
---     -- odd pixel on right?
---     if band(x2,1.99995)<1 then
---      local a=eaddr+1
---      local v=peek(a)
---      poke(a,
---       band(peek(bor(laddr,v)),0xf) +
---       band(v,0xf0)
---      )
---     end
---   end
--- end
-
 brkpts={}
 
 function gen_fill_light(light_x, light_y, brightness)
