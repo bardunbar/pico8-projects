@@ -100,36 +100,66 @@ end
 brkpts={}
 
 function gen_fill_light(light_x, light_y, brightness)
-  local l_brightness, fills = brightness, light_fills
+  local l_brightness, fills = brightness * brightness, light_fills
   return function(sx, ex, y)
     -- Transform the coordinates into the light's frame
     local lsx, lex, ly = sx - light_x, ex - light_x, y - light_y
     -- Per line flicker (TODO)
-    local b = l_brightness
+    local b = l_brightness --* (rnd(0.16) + 0.92)
 
     local brightest_level = 1
     local y_sqr = ly * ly
-    for level = 5, 1, -1 do
-      local l_range = light_range[level]
-      local x_sqr = l_range - y_sqr
-      if x_sqr > 0 then
-        brkpts[level] = _sqrt[x_sqr]
-      else
-        brightest_level = level + 1
+    local s_range, e_range = y_sqr + (lsx * lsx), y_sqr + (lex * lex)
+    local lv_start, lv_end
+
+    -- Find the start and end light levels for the start and end of the line
+    for level = 5, 0, -1 do
+      local r = (light_range[level] * b) & 0xffff
+      if not lv_start and s_range >= r then
+        lv_start = level + 1
+        if (lv_end) break
+      end
+      if not lv_end and e_range >= r then
+        lv_end = level + 1
+        if (lv_start) break
+      end
+    end
+
+    local low_level, high_level = 1, max(lv_start, lv_end)
+    local m = max(sx - light_x, light_x - ex)
+    for level = high_level - 1, 1, -1 do
+    -- for level = 5, 1, -1 do
+      local band_range = (light_range[level] * b) & 0xffff
+      local x_sqr = band_range - y_sqr
+      local brp = _sqrt[x_sqr]
+      brkpts[level] = brp
+      if not brp or brp < m then
+        low_level = level + 1
         break
       end
     end
 
+    -- for level = 5, 1, -1 do
+    --   local l_range = light_range[level]
+    --   local x_sqr = l_range - y_sqr
+    --   if x_sqr > 0 then
+    --     brkpts[level] = _sqrt[x_sqr]
+    --   else
+    --     brightest_level = level + 1
+    --     break
+    --   end
+    -- end
+
     local x_fill_start = sx
     local x_fill_end
-    local start_level, end_level = 6, 6
-    for level = start_level, brightest_level + 1, -1 do
+    local start_level, end_level = lv_start, lv_end
+    for level = start_level, low_level + 1, -1 do
       x_fill_end = light_x - brkpts[level - 1]
       fills[level](x_fill_start, x_fill_end - 1, y)
       x_fill_start = x_fill_end
     end
 
-    for level = brightest_level, end_level - 1 do
+    for level = low_level, end_level - 1 do
       x_fill_end = light_x + brkpts[level]
       fills[level](x_fill_start, x_fill_end - 1, y)
       x_fill_start = x_fill_end
@@ -154,6 +184,7 @@ light_range = {
   26 * 42, 34 * 42,
   42 * 42
 }
+light_range[0] = -1000
 
 -- light_fills = {
 --   gen_fill_color(7), --fill_none,        -- Max light level, do nothing
